@@ -23,10 +23,7 @@ function helloTriangle(){
         return;
     }
 
-    //clear the buffers to prepare
-    gl.clearColor(0.08, 0.08, 0.08, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+    
     //define data the GPU will use
 
     //Raw triangle
@@ -92,6 +89,48 @@ function helloTriangle(){
         showError(`Failed to LINK shaders - ${linkError}`);
         return;
     }
+
+    //get the vertex attrib positon to use vector
+    const vertexPositionAttribLocation = gl.getAttribLocation(triangleShaderProgram, 'vertexPosition');
+    if(vertexPositionAttribLocation < 0){
+        showError('Failed to get attrib location for vertexPosition');
+        return;
+    }
+
+    //PIPELINE
+
+    //Output merger - how to merge the shaded pixel fragment with the existing output image
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    gl.clearColor(0.08, 0.08, 0.08, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //Rasterizer - which pixels are part of a triangle
+    gl.viewport(0,0,canvas.width, canvas.height);
+    
+    //Set GPU program (vertex + fragment shader pair)
+    gl.useProgram(triangleShaderProgram);
+    gl.enableVertexAttribArray(vertexPositionAttribLocation)
+
+    //Input Assembler - how to read vertices from our gpu to buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleGeoBuffer);
+    gl.vertexAttribPointer(
+        /* index: which attribute to use  */ 
+        vertexPositionAttribLocation,
+        /* size: how many components in that attriute */
+        2,
+        /* type: what is the data stored in the GPU buffer? for this atribute?*/
+        gl.FLOAT, 
+        /* normalized: determines how to convert ints to floats, if that's what you're doing */
+        false,
+        /*stride how forward to move between between bytes from one step to next*/
+        2 * Float32Array.BYTES_PER_ELEMENT,
+        /*offset: how many bite should buffer skip */
+        0
+    );
+
+    //Draw call (configures primitive assembly)
+    gl.drawArrays(gl.TRIANGLES, 0, 3,)
 }
 try{
     helloTriangle();
